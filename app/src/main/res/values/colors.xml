@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="flash_light_normal">#99ffffff</color>
+    <color name="flash_light_pre">#ffffffff</color>
+    <color name="scan_tip_bg_color">#33ffffff</color>
+    <color name="scan_stroke_color">#4dffffff</color>
+</resources>

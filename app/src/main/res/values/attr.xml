@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <declare-styleable name="FrameView">
+        <attr name="segment_width" format="dimension"/>
+        <attr name="segment_length" format="dimension"/>
+        <attr name="segment_color" format="color"/>
+
+        <attr name="left_color" format="color"/>
+        <attr name="right_color" format="color"/>
+        <attr name="middle_color" format="color"/>
+
+        <attr name="scan_width" format="dimension"/>
+
+        <attr name="percent" format="float"/>
+    </declare-styleable>
+    
+</resources>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/rl"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CaptureActivity">
+
+    <SurfaceView
+        android:id="@+id/surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!--标题-->
+    <FrameLayout
+        android:background="#393a3f"
+        android:id="@+id/title_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+        <ImageView
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="@null"
+            android:src="@drawable/selector_user_detail_back"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="扫一扫"
+            android:textColor="#ffffff"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/gallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:text="相册"
+            android:textColor="#ffffff"
+            android:textSize="16sp"/>
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textColor="#ffffff"
+        android:textSize="14sp"/>
+
+    <!--取景框-->
+    <com.sltpaya.code.view.FrameView
+        android:id="@+id/frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:percent="0.6"
+        app:scan_width="2dp"
+        app:segment_length="10dp"
+        app:segment_width="3dp"/>
+
+    <!--上层-->
+    <View
+        android:layout_below="@id/title_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/frame"
+        android:background="#70000000"/>
+
+    <!--下层-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/frame"
+        android:background="#70000000"/>
+
+    <!--左层-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@id/frame"
+        android:layout_alignTop="@id/frame"
+        android:layout_toLeftOf="@id/frame"
+        android:layout_toStartOf="@id/frame"
+        android:background="#70000000"/>
+
+    <!--右层-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@id/frame"
+        android:layout_alignTop="@id/frame"
+        android:layout_toEndOf="@id/frame"
+        android:layout_toRightOf="@id/frame"
+        android:background="#70000000"/>
+
+    <!--手电筒-->
+    <TextView
+        android:id="@+id/flash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/frame"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:drawablePadding="6dp"
+        android:drawableTop="@drawable/flash_light_selector"
+        android:focusable="true"
+        android:text="轻触照亮"
+        android:textColor="@color/flash_light_color"
+        android:textSize="12sp"
+        android:visibility="gone"/>
+
+</RelativeLayout>
