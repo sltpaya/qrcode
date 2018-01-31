@@ -174,17 +174,21 @@ public class AllDecode extends QDecode {
      */
     private String decodeWithZxing() {
         //zxing
-        PlanarYUVLuminanceSource source = buildLuminanceSource(mData, mSize.width, mSize.height);
-        if (source != null) {
-            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-            try {
+        try {
+            PlanarYUVLuminanceSource source = buildLuminanceSource(mData, mSize.width, mSize.height);
+            if (source != null) {
+                BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
                 Result rawResult = multiFormatReader.decodeWithState(bitmap);
                 return rawResult == null ? null : rawResult.getText();
-            } catch (ReaderException re) {
-                // continue
-            } finally {
-                multiFormatReader.reset();
             }
+        } catch (ReaderException re) {
+            // continue
+        } catch (IllegalArgumentException e) {
+            // continue (Sometime. like source.width < 1 and source.height < 1)
+        } catch (Exception e) {
+            // unknown exception
+        } finally {
+            multiFormatReader.reset();
         }
         return null;
     }
