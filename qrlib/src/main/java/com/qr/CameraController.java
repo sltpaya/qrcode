@@ -11,6 +11,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import com.qr.camera.CameraManager;
 import com.qr.camera.focus.QRFocusCallback;
+import com.qr.decode.base.QDecode;
 import com.qr.decode.base.QRHandler;
 import java.io.IOException;
 
@@ -91,19 +92,25 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
 
     public void onPause() {
         if (handler != null) {
+            handler.destroy();
             handler = null;
         }
-        cameraManager.closeDriver();
         if (!isHasSurface) {
             scanPreview.getHolder().removeCallback(this);
         }
+        QDecode.needDecode = false;
+        cameraManager.stopPreview();
+        cameraManager.closeDriver();
     }
 
     /**
      * SurfaceHolder已经创建了， 此时手动重启相机
      */
     public synchronized void onResumeCamera() {
-        handler = null;
+        if (handler != null) {
+            handler.destroy();
+            handler = null;
+        }
         initCamera(scanPreview.getHolder());
     }
 
@@ -111,7 +118,10 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
         cameraManager = new CameraManager(mContext);
         cameraManager.setAutoFocusCallback(focusCallback);
 
-        handler = null;
+        if (handler != null) {
+            handler.destroy();
+            handler = null;
+        }
 
         if (isHasSurface) {
             // The activity was paused but not stopped, so the surface still exists. Therefore

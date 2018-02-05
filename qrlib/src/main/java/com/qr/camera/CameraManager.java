@@ -89,11 +89,16 @@ public class CameraManager {
      * 关闭相机
      */
     public synchronized void closeDriver() {
-        if (camera != null) {
-            camera.setPreviewCallback(null);
-            autoFocusManager.stop();
-            camera.release();
-            camera = null;
+        try{
+            if (camera != null) {
+                camera.setPreviewCallback(null);
+                //autoFocusManager.stop();
+                camera.lock();
+                camera.release();
+                camera = null;
+            }
+        } catch (Exception e) {
+            //camera.release error
         }
     }
 

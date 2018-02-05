@@ -141,6 +141,7 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
     @Override
     protected void onResume() {
         cameraController.onResume();
+        startScanAnim();
         if (mIsGalleryDecode) {
             //正在识别相册二维码, 此时不预览摄像头数据
             mSurfaceView.getHolder().removeCallback(cameraController);
@@ -155,6 +156,7 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
         dismissProgress();
         beepManager.close();
         cameraController.onPause();
+        frameView.stopScan();
         super.onPause();
     }
 
