@@ -1,11 +1,16 @@
 package com.qr.camera;
 
 import android.content.Context;
+import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.util.Log;
 import android.view.Display;
+import android.view.Surface;
 import android.view.WindowManager;
+
+import com.qr.decode.Size;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,8 +27,27 @@ public final class CameraConfiguration {
     private Point screenResolution;
     private Point cameraResolution;
 
+    /**
+     * 设备方向
+     */
+    private int mOrientation;
+
+    private Size mSurfaceSize;
+
     public CameraConfiguration(Context context) {
         this.context = context;
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        if (windowManager != null) {
+            mOrientation = windowManager.getDefaultDisplay().getRotation();
+        }
+    }
+
+    public Size getSurfaceSize() {
+        return mSurfaceSize;
+    }
+
+    public int getOrientation() {
+        return mOrientation;
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -32,6 +56,10 @@ public final class CameraConfiguration {
         WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         assert manager != null;
         Display display = manager.getDefaultDisplay();
+
+        parameters.setPreviewFpsRange(20, 40);
+        parameters.setJpegQuality(100);
+        parameters.setPictureFormat(ImageFormat.JPEG);
 
         screenResolution = getDisplaySize(display);
 
@@ -46,6 +74,39 @@ public final class CameraConfiguration {
         }
 
         cameraResolution = findBestPreviewSizeValue(parameters, screenResolutionForCamera);
+    }
+
+    public Size initSurfaceSize(List<Camera.Size> sizeList, int previewWidth, int previewHeight) {
+        if (mOrientation == Surface.ROTATION_0 || mOrientation == Surface.ROTATION_180) {
+            mSurfaceSize = getBigEnoughSize(sizeList, previewWidth, previewHeight);
+        } else {
+            mSurfaceSize = getBigEnoughSize(sizeList, previewHeight, previewWidth);
+        }
+        Log.d(TAG, getClass().getName() + ".initSurfaceSize() mSurfaceSize = " + mSurfaceSize.toString());
+        return mSurfaceSize;
+    }
+
+    /**
+     * 返回sizes中宽高大于最小宽高的最小尺寸
+     */
+    private Size getBigEnoughSize(List<Camera.Size> sizeList, int minWidth, int minHeight) {
+        Camera.Size curSize = sizeList.get(0);
+        boolean curBigEnough = curSize.width >= minWidth && curSize.height >= minHeight;
+        for (int i = 1; i < sizeList.size(); i++) {
+            Camera.Size nextSize = sizeList.get(i);
+            boolean nextBigEnough = nextSize.width >= minWidth && nextSize.height >= minHeight;
+            if (!curBigEnough && nextBigEnough) {//curSize尺寸不够，nextSize够
+                curBigEnough = true;
+                curSize = nextSize;
+            } else if (curBigEnough ^ !nextBigEnough) {//curSize与nextSize尺寸同够或同不够
+                long curPixels = (long) curSize.width * curSize.height;
+                long nextPixels = (long) nextSize.width * nextSize.height;
+                if (curBigEnough ^ (curPixels < nextPixels)) {//尺寸同够且curSize不小于nextSize 或 尺寸同不够且curSize小于nextSize
+                    curSize = nextSize;
+                }
+            }
+        }
+        return new Size(curSize.width, curSize.height);
     }
 
     private Point getDisplaySize(final Display display) {

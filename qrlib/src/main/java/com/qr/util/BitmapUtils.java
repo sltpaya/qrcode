@@ -73,14 +73,18 @@ public class BitmapUtils {
         int[] pixels = new int[width * height];
         int inputOffset = top * dataWidth + left;
 
-        for (int y = 0; y < height; y++) {
-            int outputOffset = y * width;
-            for (int x = 0; x < width; x++) {
-                int grey = yuv[inputOffset + x * THUMBNAIL_SCALE_FACTOR] & 0xff;
-                pixels[outputOffset + x] = 0xFF000000 | (grey * 0x00010101);
+        try {
+            for (int y = 0; y < height; y++) {
+                int outputOffset = y * width;
+                for (int x = 0; x < width; x++) {
+                    int i = inputOffset + x * THUMBNAIL_SCALE_FACTOR;
+                    if (i < yuv.length && outputOffset + x < pixels.length) {
+                        pixels[outputOffset + x] = 0xFF000000 | (yuv[i] & 0xff * 0x00010101);
+                    }
+                }
+                inputOffset += dataWidth * THUMBNAIL_SCALE_FACTOR;
             }
-            inputOffset += dataWidth * THUMBNAIL_SCALE_FACTOR;
-        }
+        } catch (Exception ignore) { }
         return pixels;
     }
 

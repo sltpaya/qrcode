@@ -6,6 +6,8 @@ import android.hardware.Camera;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.SurfaceHolder;
+
+import com.qr.ICameraDataProvider;
 import com.qr.camera.focus.AutoFocusManager;
 import com.qr.camera.focus.QRFocusCallback;
 import com.qr.camera.open.OpenCameraInterface;
@@ -34,6 +36,10 @@ public class CameraManager {
     public CameraManager(Context context) {
         mContext = context;
         this.configManager = new CameraConfiguration(context);
+    }
+
+    public CameraConfiguration getConfigManager() {
+        return configManager;
     }
 
     /**
@@ -114,13 +120,15 @@ public class CameraManager {
     /**
      * 开启预览
      */
-    public synchronized void startPreview(Camera.PreviewCallback previewCallback) {
+    public synchronized void startPreview(ICameraDataProvider provider) {
         Camera theCamera = camera;
         if (theCamera != null && !previewing) {
-            camera.setPreviewCallback(previewCallback);
+            camera.setPreviewCallback(provider);
             theCamera.startPreview();
             previewing = true;
-            autoFocusManager = new AutoFocusManager(camera, focusCallback);
+            if (provider.needAutoFocus()) {
+                autoFocusManager = new AutoFocusManager(camera, focusCallback);
+            }
         }
     }
 
@@ -207,6 +215,10 @@ public class CameraManager {
         return configManager.getScreenResolution();
     }
 
+    public Camera getCamera() {
+        return camera;
+    }
+
     /**
      * 获取相机预览尺寸大小
      */
@@ -224,6 +236,7 @@ public class CameraManager {
         void on();
         void off();
     }
+
 
 
 }

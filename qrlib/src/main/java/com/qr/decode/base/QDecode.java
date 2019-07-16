@@ -2,18 +2,22 @@ package com.qr.decode.base;
 
 import android.graphics.Point;
 import android.hardware.Camera;
+import android.os.Handler;
+
+import com.qr.ICameraDataProvider;
 import com.qr.ICameraP;
 
 /**
  * Author：SLTPAYA
  * Date：2017/11/24 15:30
  */
-public abstract class QDecode implements Camera.PreviewCallback {
+public abstract class QDecode implements ICameraDataProvider {
 
-    public static boolean needDecode = true;
-    protected final ICameraP i;
+    public static volatile boolean needDecode = true;
+    protected ICameraP i;
 
-    public QDecode(ICameraP i) {
+    @Override
+    public void init(Handler handler, ICameraP i) {
         this.i = i;
     }
 
@@ -26,9 +30,12 @@ public abstract class QDecode implements Camera.PreviewCallback {
         if (QDecode.needDecode) {
             QDecode.needDecode = false;
             Point cameraResolution = i.getCameraManager().getCameraResolution();
-            decode(data, camera.getParameters().getPreviewSize(), cameraResolution.x, cameraResolution.y);
+            decode(data, camera.getParameters().getPreviewSize(), cameraResolution.x, cameraResolution.y, i);
         }
     }
-    protected abstract void decode(byte[] data, Camera.Size size, int width, int height);
 
+    @Override
+    public boolean needAutoFocus() {
+        return true;
+    }
 }

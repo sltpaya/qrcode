@@ -87,7 +87,7 @@ public class Image {
 
     @SuppressWarnings("SuspiciousNameCombination")
     public void setCrop(Rect rect) {
-        setCrop(rect.top, rect.left, rect.height(), rect.width());
+        setCrop(rect.left, rect.top, rect.width(), rect.height());
     }
 
     private native long convert(long peer, String format);

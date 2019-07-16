@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.qr.ICameraDataProvider;
 import com.qr.ICameraP;
 import com.qr.QResult;
 import com.qr.camera.CameraManager;
@@ -17,12 +18,13 @@ public class QRHandler extends Handler {
 
     private ICameraP i;
 
-    public QRHandler(CameraManager manager, ICameraP i) {
+    public QRHandler(CameraManager manager, ICameraP i, ICameraDataProvider dataProvider) {
         super(Looper.getMainLooper());
         this.i = i;
         QDecode.reset();
         //构建解码器并且开启扫描
-        manager.startPreview(new AllDecode(this, i));
+        dataProvider.init(this, i);
+        manager.startPreview(dataProvider);
     }
 
     public void destroy() {

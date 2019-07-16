@@ -11,6 +11,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import com.qr.camera.CameraManager;
 import com.qr.camera.focus.QRFocusCallback;
+import com.qr.decode.AllDecode;
 import com.qr.decode.base.QDecode;
 import com.qr.decode.base.QRHandler;
 import java.io.IOException;
@@ -29,13 +30,15 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
     private CameraManager cameraManager;
     private QRHandler handler;
 
-    private SurfaceView scanPreview = null;
+    private SurfaceView scanPreview;
     private Rect mCropRect = null;
 
     private boolean isHasSurface = false;
     private QRFocusCallback focusCallback;
 
     private QRCallback mQRCallback;
+
+    private ICameraDataProvider dataProvider;
 
     private CameraController(SurfaceView surfaceView) {
         mContext = surfaceView.getContext();
@@ -59,6 +62,10 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
     void setQRCallback(QRCallback QRCallback) {
         mQRCallback = QRCallback;
         assert mQRCallback != null;
+    }
+
+    public void setDataProvider(ICameraDataProvider dataProvider) {
+        this.dataProvider = dataProvider;
     }
 
     @Override
@@ -172,7 +179,7 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
             // Creating the handler starts the preview, which can also throw a
             // RuntimeException.
             if (handler == null) {
-                handler = new QRHandler(cameraManager, this);
+                handler = new QRHandler(cameraManager, this, dataProvider);
             }
             Point resolution = cameraManager.getCameraResolution();
             mCropRect = mQRCallback.getRect(resolution.x, resolution.y);
@@ -200,10 +207,18 @@ public class CameraController implements SurfaceHolder.Callback, ICameraP {
             c = new CameraController(surfaceView);
         }
 
-        public CameraController build(@NonNull QRCallback callback) {
+        public CameraController build(@NonNull QRCallback callback, ICameraDataProvider dataProvider) {
             c.setQRCallback(callback);
+            c.setDataProvider(dataProvider);
             return c;
         }
+
+        public CameraController build(@NonNull QRCallback callback) {
+            c.setQRCallback(callback);
+            c.setDataProvider(new AllDecode());
+            return c;
+        }
+
     }
 
 }

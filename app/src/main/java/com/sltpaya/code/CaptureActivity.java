@@ -2,11 +2,18 @@ package com.sltpaya.code;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.PixelCopy;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,15 +21,17 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.muddzdev.pixelshot.PixelShot;
 import com.qr.CameraController;
 import com.qr.QRCallback;
 import com.qr.QResult;
 import com.qr.camera.CameraManager;
 import com.qr.decode.DecodeUtil;
+import com.qr.decode.SaveImg;
 import com.sltpaya.code.view.FrameView;
 import com.sltpaya.code.view.ProgressDialog;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 /**
@@ -73,7 +82,22 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
 
     private void initListener() {
         findViewById(R.id.back).setOnClickListener(v -> finish());
-        mFlashTv.setOnClickListener(v -> updateFlash());
+//        mFlashTv.setOnClickListener(v -> updateFlash());
+        mFlashTv.setOnClickListener(v -> {
+            Toast.makeText(this, "瓦城", Toast.LENGTH_SHORT).show();
+            getSurfaceBitmap(mSurfaceView, new PixelCopyListener() {
+                @Override
+                public void onSurfaceBitmapReady(Bitmap surfaceBitmap) {
+                    //Bitmap bm = Bitmap.createBitmap(surfaceBitmap, frameView.getLeft(), frameView.getTop(), frameView.getWidth(), frameView.getHeight());
+                    SaveImg.saveImg(surfaceBitmap, System.currentTimeMillis()+".jpg", CaptureActivity.this);
+                }
+
+                @Override
+                public void onSurfaceBitmapError() {
+                    Log.d(TAG, "Couldn't create a bitmap of the SurfaceView");
+                }
+            });
+        });
         findViewById(R.id.gallery).setOnClickListener(v -> {
             Intent intent = new Intent();
             intent.setType("image/*");
@@ -168,11 +192,48 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
             updateFlash();
         }
     }
+@Nullable
+    public static void getSurfaceBitmap(@NonNull SurfaceView surfaceView, @NonNull final PixelCopyListener listener) {
+        final Bitmap bitmap = Bitmap.createBitmap(surfaceView.getWidth(), surfaceView.getHeight(), Bitmap.Config.ARGB_8888);
+        final HandlerThread handlerThread = new HandlerThread(CaptureActivity.class.getSimpleName());
+        handlerThread.start();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            PixelCopy.request(surfaceView, bitmap, copyResult -> {
+                if (copyResult == PixelCopy.SUCCESS) {
+                    listener.onSurfaceBitmapReady(bitmap);
+                } else {
+                    listener.onSurfaceBitmapError();
+                }
+                handlerThread.quitSafely();
+            }, new Handler(handlerThread.getLooper()));
+        } else {
+            Log.d(PixelShot.class.getSimpleName(), "Saving an image of a SurfaceView is only supported from API 24");
+        }
+    }
+
+    interface PixelCopyListener {
+        void onSurfaceBitmapReady(Bitmap bitmap);
+        void onSurfaceBitmapError();
+    }
 
     @Override
     public void handleDecode(QResult rawResult) {
         resetFlash();/*The flashing lights are on and off*/
         beepManager.playBeepSoundAndVibrate();
+
+        getSurfaceBitmap((SurfaceView) mSurfaceView, new PixelCopyListener() {
+            @Override
+            public void onSurfaceBitmapReady(Bitmap surfaceBitmap) {
+                //Bitmap bm = Bitmap.createBitmap(surfaceBitmap, frameView.getLeft(), frameView.getTop(), frameView.getWidth(), frameView.getHeight());
+                SaveImg.saveImg(surfaceBitmap, System.currentTimeMillis()+".jpg", CaptureActivity.this);
+            }
+
+            @Override
+            public void onSurfaceBitmapError() {
+                Log.d(TAG, "Couldn't create a bitmap of the SurfaceView");
+            }
+        });
 
         String text = rawResult.getText();
         /*跳转结果页*/
@@ -194,12 +255,12 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
         if (value < 60) {
             //低亮度下, 没有显示就显示
             if (visibility != View.VISIBLE) {
-                mFlashTv.setVisibility(View.VISIBLE);
+                //mFlashTv.setVisibility(View.VISIBLE);
             }
         } else {
             //大亮度下没有隐藏就隐藏
             if (visibility != View.GONE) {
-                mFlashTv.setVisibility(View.GONE);
+                //mFlashTv.setVisibility(View.GONE);
             }
         }
     }
@@ -219,35 +280,36 @@ public class CaptureActivity extends AppCompatActivity implements QRCallback {
     @SuppressWarnings("SuspiciousNameCombination")
     public Rect getRect(int cameraHeight, int cameraWidth) {
         /*获取布局中扫描框的位置信息*/
-        int[] location = new int[2];
-        frameView.getLocationInWindow(location);
-
-        int cropLeft = location[0];
-        int cropTop = location[1];
-
-        /*获取扫描框父容器的宽高*/
-        int containerWidth = fl.getWidth();
-        int containerHeight = fl.getHeight();
-
-        int radioWidth = cameraWidth / containerWidth;
-        int radioHeight = cameraHeight / containerHeight;
-
-        /*计算最终截取的矩形的左上角顶点x坐标*/
-        int x = cropLeft * radioWidth;
-        /*计算最终截取的矩形的左上角顶点y坐标*/
-        int y = cropTop * radioHeight;
-
-        /*获取扫描框的宽高*/
-        int cropWidth = frameView.getWidth();
-        int cropHeight = frameView.getHeight();
-
-        /*计算最终截取的矩形的宽度 */
-        int width = cropWidth * radioWidth;
-        /*计算最终截取的矩形的高度 */
-        int height = cropHeight * radioHeight;
+//        int[] location = new int[2];
+//        frameView.getLocationInWindow(location);
+//
+//        int cropLeft = location[0];
+//        int cropTop = location[1];
+//
+//        /*获取扫描框父容器的宽高*/
+//        int containerWidth = fl.getWidth();
+//        int containerHeight = fl.getHeight();
+//
+//        int radioWidth = cameraWidth / containerWidth;
+//        int radioHeight = cameraHeight / containerHeight;
+//
+//        /*计算最终截取的矩形的左上角顶点x坐标*/
+//        int x = cropLeft * radioWidth;
+//        /*计算最终截取的矩形的左上角顶点y坐标*/
+//        int y = cropTop * radioHeight;
+//
+//        /*获取扫描框的宽高*/
+//        int cropWidth = frameView.getWidth();
+//        int cropHeight = frameView.getHeight();
+//
+//        /*计算最终截取的矩形的宽度 */
+//        int width = cropWidth * radioWidth;
+//        /*计算最终截取的矩形的高度 */
+//        int height = cropHeight * radioHeight;
 
         /*生成最终的截取的矩形*/
-        return new Rect(x, y, width + x, height + y);
+        //return new Rect(x, y, width + x, height + y);
+        return new Rect(frameView.getLeft(), frameView.getTop(), frameView.getRight(), frameView.getBottom());
     }
 
     @Override
